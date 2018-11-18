@@ -2,12 +2,11 @@ local modstore = minetest.get_mod_storage()
 
 local keywords = minetest.deserialize(modstore:get_string("keywords")) or {}
 local cooldown = modstore:get_int("cooldown")
-local enabled = modstore:get_int("enabled")
+local enabled = 0
 local can_reply = true
 
-if modstore:get_int("cooldown") == 0 then
+if cooldown == 0 then
 	cooldown = 60
-	enabled = 1
 end
 
 -- register_on_receiving_chat_message(s) and register_on_sending_chat_message(s) backwards compatibility
@@ -38,6 +37,18 @@ minetest.register_on_receiving_chat_messages(function(message)
 
 	return false
 end)
+
+minetest.register_on_sending_chat_messages(function(message)
+	if enabled == 1 then
+		enabled = 0
+	end
+
+	return false
+end)
+
+if minetest.registered_chatcommands["afk"] then
+	minetest.unregister_chatcommand("afk")
+end
 
 minetest.register_chatcommand("afk", {
 	description = "Command for the afk_bot CSM.\n.afk help",
@@ -94,8 +105,6 @@ minetest.register_chatcommand("afk", {
 				enabled = 1
 				minetest.display_chat_message(minetest.colorize("orange", "[AFK_BOT] ").."Enabled")
 			end
-
-			modstore:set_int("enabled", enabled)
 		else
 			minetest.display_chat_message(minetest.colorize("red", "[AFK_BOT] Invalid command. '.afk help' to see all commands"))
 		end
